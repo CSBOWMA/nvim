@@ -1,148 +1,230 @@
 return {
 
+    -- ================= THEME =================
     {
         "dracula/vim",
-        lazy = false, -- make sure we load this during startup if it is your main colorscheme
-        priority = 1000, -- make sure to load this before all the other start plugins
+        lazy = false,
+        priority = 1000,
         config = function()
-            -- load the colorscheme here
-            vim.cmd([[colorscheme dracula]])
+            vim.cmd.colorscheme("dracula")
         end,
     },
 
-
-   {
-        "VonHeikemen/lsp-zero.nvim",
-        dependencies = {
-            -- LSP Support
-            { "neovim/nvim-lspconfig" },
-            { "williamboman/mason.nvim" },
-            { "williamboman/mason-lspconfig.nvim" },
-
-            -- Autocompletion
-            { "hrsh7th/nvim-cmp" },
-            { "hrsh7th/cmp-buffer" },
-            { "hrsh7th/cmp-path" },
-            --            {"saadparwaiz1/cmp_luasnip"},
-            { "hrsh7th/cmp-nvim-lsp" },
-            { "hrsh7th/cmp-nvim-lua" },
-
-            -- Snippets
-            { "L3MON4D3/LuaSnip" },
-            { "rafamadriz/friendly-snippets" },
-        },
-    },
-    'simrat39/rust-tools.nvim',
-    'andymass/vim-matchup',
-    'nvim-lua/plenary.nvim',
-    'nvim-tree/nvim-web-devicons',
-    'lewis6991/gitsigns.nvim',
-    'preservim/nerdtree',
-    'neovide/neovide',
-{
-    'dense-analysis/ale',
-    config = function()
-        -- Configuration goes here.
-        local g = vim.g
-
-        g.ale_ruby_rubocop_auto_correct_all = 1
-
-        g.ale_linters = {
-            ruby = {'rubocop', 'ruby'},
-            lua = {'lua_language_server'},
-            cpp = {'clangd'},
-            c = {'clangd'},
-            rust = {'rust_analyzer'}
-        }
-    end
-},
-
-    {'romgrk/barbar.nvim',
-    dependencies = {
-        'lewis6991/gitsigns.nvim', -- OPTIONAL: for git status
-        'nvim-tree/nvim-web-devicons', -- OPTIONAL: for file icons
-    },
-    init = function() vim.g.barbar_auto_setup = false end,
-    opts = {
-        -- lazy.nvim saadparwaiz1/cmp_luasnipwill automatically call setup for you. put your options here, anything missing will use the default:
-        -- animation = true,
-        -- insert_at_start = true,
-        -- …etc.
-    },
-    version = '^1.0.0', -- optional: only update when a new 1.x version is released
-},
-
-{
-    "nvim-treesitter/nvim-treesitter",
-    build = ":TSUpdate"
-},
-
-{
-    "windwp/nvim-autopairs",
-    dependencies = { "nvim-cmp", },
-    opts = {
-        fast_wrap = {},
-        disable_filetype = { "TelescopePrompt", "vim" },
-    },
-    config = function(_, opts)
-        require("nvim-autopairs").setup(opts)
-
-        -- setup cmp for autopairs
-        local cmp_autopairs = require "nvim-autopairs.completion.cmp"
-        require("cmp").event:on("confirm_done", cmp_autopairs.on_confirm_done())
-    end,
-},
-
-{
-    'nvim-lualine/lualine.nvim',
-    dependencies = { 'nvim-tree/nvim-web-devicons' }
-},
-
-{
-    "SmiteshP/nvim-navic",
-    dependencies = "neovim/nvim-lspconfig",
-    config = function()
-        local navic = require("nvim-navic")
-
-        require("lspconfig").clangd.setup {
-            on_attach = function(client, bufnr)
-                navic.attach(client, bufnr)
-            end
-        }
-    end
-},
--- lazy.nvim
-{
-  "folke/noice.nvim",
-  event = "VeryLazy",
-  opts = {
-    -- add any options here
-  },
-  dependencies = {
-    -- if you lazy-load any plugin below, make sure to add proper `module="..."` entries
-    "MunifTanjim/nui.nvim",
-    -- OPTIONAL:
-    --   `nvim-notify` is only needed, if you want to use the notification view.
-    --   If not available, we use `mini` as the fallback
-    "rcarriga/nvim-notify",
-    }
-},
-
-
+    -- ================= LSP CORE =================
     {
-        "SmiteshP/nvim-navic",
-        dependencies = "neovim/nvim-lspconfig",
+        "neovim/nvim-lspconfig",
+        dependencies = {
+            "williamboman/mason.nvim",
+            "williamboman/mason-lspconfig.nvim",
+            "SmiteshP/nvim-navic",
+        },
+
         config = function()
+            require("mason").setup()
+            require("mason-lspconfig").setup()
+
             local navic = require("nvim-navic")
 
-            require("lspconfig").clangd.setup {
+            vim.lsp.config("clangd", {
+
+                cmd = {
+                    "clangd",
+                    "--clang-tidy",
+                    "--background-index",
+                    "--completion-style=detailed",
+                    "--header-insertion=never",
+                },
+
                 on_attach = function(client, bufnr)
-                    navic.attach(client, bufnr)
-                end
-            }
-        end
+                    if client.server_capabilities.documentSymbolProvider then
+                        navic.attach(client, bufnr)
+                    end
+                end,
+            })
+
+            vim.lsp.enable("clangd")
+        end,
     },
 
+    -- ================= COMPLETION =================
+    {
+        "hrsh7th/nvim-cmp",
+        dependencies = {
+            "hrsh7th/cmp-nvim-lsp",
+            "hrsh7th/cmp-buffer",
+            "hrsh7th/cmp-path",
+        },
+        config = function()
+            local cmp = require("cmp")
 
+            cmp.setup({
+                mapping = cmp.mapping.preset.insert({
+                    ["<CR>"] = cmp.mapping.confirm({ select = true }),
+                }),
+                sources = {
+                    { name = "nvim_lsp" },
+                    { name = "buffer" },
+                    { name = "path" },
+                },
+            })
+        end,
+    },
+
+    -- ================= TREESITTER =================
+    {
+        "nvim-treesitter/nvim-treesitter",
+        build = ":TSUpdate",
+        opts = {
+            ensure_installed = { "c", "cpp", "lua" },
+            highlight = { enable = true },
+        },
+    },
+
+    -- ================= FORMATTING (clang-format) =================
+    {
+        "stevearc/conform.nvim",
+        opts = {
+            formatters_by_ft = {
+                c = { "clang_format" },
+                cpp = { "clang_format" },
+            },
+            format_on_save = {
+                timeout_ms = 1000,
+                lsp_fallback = true,
+            },
+        },
+    },
+
+    -- ================= FILE TREE (MODERN REPLACEMENT FOR NERDTree) =================
+    {
+        "nvim-tree/nvim-tree.lua",
+        dependencies = {
+            "nvim-tree/nvim-web-devicons",
+        },
+        config = function()
+            require("nvim-tree").setup({
+                view = {
+                    width = 30,
+                },
+                renderer = {
+                    group_empty = true,
+                },
+            })
+
+        end,
+    },
+
+    -- ================= GIT =================
+    {
+        "lewis6991/gitsigns.nvim",
+        config = true,
+    },
+
+    -- ================= UI / CMDLINE =================
+    {
+        "folke/noice.nvim",
+        event = "VeryLazy",
+        dependencies = {
+            "MunifTanjim/nui.nvim",
+            "rcarriga/nvim-notify",
+        },
+        opts = {
+            lsp = {
+                progress = { enabled = true },
+            },
+        },
+    },
+
+    -- ================= STATUSLINE =================
+    {
+        "nvim-lualine/lualine.nvim",
+        dependencies = { "nvim-tree/nvim-web-devicons" },
+        config = true,
+    },
+
+    -- ================= AUTO PAIRS =================
+    {
+        "windwp/nvim-autopairs",
+        config = true,
+    },
+    {
+        "akinsho/bufferline.nvim",
+        dependencies = {
+            "nvim-tree/nvim-web-devicons",
+        },
+        version = "*",
+        config = function()
+            require("bufferline").setup({
+                options = {
+                    mode = "buffers",
+                    separator_style = "slant",
+                    diagnostics = "nvim_lsp",
+                    show_buffer_close_icons = true,
+                    show_close_icons = false,
+                    always_show_bufferline = true,
+                },
+            })
+
+            -- Alt + number mapping (1–9)
+            for i = 1, 9 do
+                vim.keymap.set("n", "<A-" .. i .. ">", function()
+                    vim.cmd("BufferLineGoToBuffer " .. i)
+                end)
+            end
+
+            -- optional extras
+            vim.keymap.set("n", "<A-h>", ":BufferLineCyclePrev<CR>")
+            vim.keymap.set("n", "<A-l>", ":BufferLineCycleNext<CR>")
+        end,
+    },
+
+    {
+        "nvim-telescope/telescope.nvim",
+        dependencies = {
+            "nvim-lua/plenary.nvim",
+        },
+
+        config = function()
+            local telescope = require("telescope")
+
+            telescope.setup({
+                defaults = {
+                    layout_strategy = "horizontal",
+
+                    layout_config = {
+                        prompt_position = "top",
+                    },
+
+                    sorting_strategy = "ascending",
+
+                    mappings = {
+                        i = {
+                            ["<C-j>"] = "move_selection_next",
+                            ["<C-k>"] = "move_selection_previous",
+                        },
+                    },
+                },
+            })
+        end,
+    },
+
+    -- Keybinds
+    {
+        "folke/which-key.nvim",
+        event = "VeryLazy",
+        opts = {},
+    },
+
+    {
+        "m4xshen/hardtime.nvim",
+        dependencies = {
+            "MunifTanjim/nui.nvim",
+        },
+        opts = {},
+    },
+
+    {
+        "tris203/precognition.nvim",
+        opts = {},
+    }
 }
-
