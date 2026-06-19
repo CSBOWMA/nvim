@@ -38,6 +38,7 @@ return {
                 on_attach = function(client, bufnr)
                     if client.server_capabilities.documentSymbolProvider then
                         navic.attach(client, bufnr)
+                        client.server_capabilities.semanticTokensProvider = true
                     end
                 end,
             })
@@ -216,15 +217,47 @@ return {
     },
 
     {
-        "m4xshen/hardtime.nvim",
-        dependencies = {
-            "MunifTanjim/nui.nvim",
-        },
+        "tris203/precognition.nvim",
         opts = {},
     },
 
     {
-        "tris203/precognition.nvim",
-        opts = {},
+        "yetone/avante.nvim",
+
+        build = vim.fn.has("win32") ~= 0
+        and "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false"
+        or "make",
+
+        event = "VeryLazy",
+        version = false,
+
+        opts = {
+            instructions_file = "avante.md",
+
+            provider = "ollama",
+
+            providers = {
+                ollama = {
+                    endpoint = "http://100.74.165.61:11434", -- use Tailscale IP (IMPORTANT)
+                    model = "qwen2.5-coder:14b",
+                    timeout = 300000,
+
+                    extra_request_body = {
+                        temperature = 0.2,
+                        num_ctx = 32768,
+                    },
+                }, 
+            },
+            behaviour = {
+                auto_apply_diff_after_generation = false,
+            },
+        },
+
+        dependencies = {
+            "nvim-lua/plenary.nvim",
+            "MunifTanjim/nui.nvim",
+            "nvim-tree/nvim-web-devicons",
+            "stevearc/dressing.nvim",
+        },
     }
 }

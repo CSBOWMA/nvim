@@ -40,3 +40,11 @@ vim.opt.isfname:append("@-@")
 
 vim.opt.termguicolors = true
 vim.opt.showtabline = 2
+
+vim.diagnostic.config({
+  virtual_text = true,
+  signs = true,
+  underline = true,
+  update_in_insert = false,
+  severity_sort = true,
+})
