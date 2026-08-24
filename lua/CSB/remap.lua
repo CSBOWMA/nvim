@@ -58,37 +58,3 @@ vim.keymap.set("n", "<leader>fb", tb("git_branches"))
 
 vim.keymap.set("n", "<leader>bb", tb("buffers"))
 
--- Build project
-vim.keymap.set("n", "<leader>mb", function()
-  vim.cmd("!cmake --build build")
-end, { desc = "Build project" })
-
--- Run tests
-vim.keymap.set("n", "<leader>mt", function()
-  vim.cmd("!ctest --output-on-failure")
-end, { desc = "Run tests" })
-
--- Run python prototype (for your scraper repo)
-vim.keymap.set("n", "<leader>mr", function()
-  vim.cmd("!./run.sh")
-end, { desc = "Run project script" })
-
--- Open Avante chat
-vim.keymap.set("n", "<leader>aa", "<cmd>AvanteToggle<CR>", {
-  desc = "Avante chat",
-})
-
--- Ask Avante to explain code
-vim.keymap.set("v", "<leader>ae", "<cmd>AvanteAsk Explain this code<CR>", {
-  desc = "Explain selection",
-})
-
--- Ask Avante to refactor
-vim.keymap.set("v", "<leader>ar", "<cmd>AvanteAsk Refactor this code<CR>", {
-  desc = "Refactor selection",
-})
-
--- Generate tests
-vim.keymap.set("v", "<leader>at", "<cmd>AvanteAsk Write unit tests for this<CR>", {
-  desc = "Generate tests",
-})

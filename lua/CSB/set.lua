@@ -48,3 +48,13 @@ vim.diagnostic.config({
   update_in_insert = false,
   severity_sort = true,
 })
+
+vim.lsp.config("*", {
+    capabilities = require("cmp_nvim_lsp").default_capabilities(),
+})
+
+vim.api.nvim_create_autocmd({ "InsertLeave", "BufEnter", "BufWinEnter" }, {
+    callback = function(args)
+        vim.diagnostic.show(nil, args.buf)
+    end,
+})
